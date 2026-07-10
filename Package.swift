@@ -1,4 +1,4 @@
-// swift-tools-version:6.0
+// swift-tools-version: 6.3.1
 
 import Foundation
 import PackageDescription
@@ -15,7 +15,7 @@ extension Target.Dependency {
 
 extension Target.Dependency {
     static var identitiesTypes: Self { .product(name: "IdentitiesTypes", package: "swift-identities-types") }
-    static var identities: Self { .product(name: "Identity Backend", package: "swift-identities") }
+    static var identities: Self { .product(name: "Identity Backend", package: "swift-authentication") }
     static var mailgunMessages: Self { .product(name: "Mailgun Messages", package: "swift-mailgun") }
     static var dependencies: Self { .product(name: "Dependencies", package: "swift-dependencies") }
     static var HTMLEmail: Self { .product(name: "HTMLEmail", package: "swift-html") }
@@ -27,20 +27,20 @@ extension Target.Dependency {
 let package = Package(
     name: "swift-identities-mailgun",
     platforms: [
-        .macOS(.v14),
-        .iOS(.v17)
+        .macOS(.v26),
+        .iOS(.v26)
     ],
     products: [
         .library(name: .identitiesMailgun, targets: [.identitiesMailgun]),
         .library(name: .identitiesMailgunLive, targets: [.identitiesMailgunLive])
     ],
     dependencies: [
-        .package(url: "https://github.com/coenttb/swift-identities-types", from: "0.0.1"),
-        .package(url: "https://github.com/coenttb/swift-identities", from: "0.0.1"),
-        .package(url: "https://github.com/coenttb/swift-mailgun", from: "0.0.1"),
-        .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "1.9.2"),
-        .package(url: "https://github.com/coenttb/swift-html", from: "0.5.0"),
-        .package(url: "https://github.com/coenttb/swift-server-foundation", from: "0.0.1")
+        .package(url: "https://github.com/swift-foundations/swift-identities-types.git", branch: "main"),
+        .package(url: "https://github.com/swift-foundations/swift-authentication.git", branch: "main"),
+        .package(url: "https://github.com/swift-foundations/swift-mailgun.git", branch: "main"),
+        .package(url: "https://github.com/swift-foundations/swift-dependencies.git", branch: "main"),
+        .package(url: "https://github.com/swift-foundations/swift-html.git", branch: "main"),
+        .package(url: "https://github.com/swift-foundations/swift-server-foundation.git", branch: "main")
     ],
     targets: [
         .target(
