@@ -18,9 +18,14 @@ extension Target.Dependency {
     static var identities: Self { .product(name: "Identity Backend", package: "swift-authentication") }
     static var mailgunMessages: Self { .product(name: "Mailgun Messages", package: "swift-mailgun") }
     static var dependencies: Self { .product(name: "Dependencies", package: "swift-dependencies") }
-    static var HTMLEmail: Self { .product(name: "HTMLEmail", package: "swift-html") }
     static var html: Self { .product(name: "HTML", package: "swift-html") }
-    static var htmlWebsite: Self { .product(name: "HTMLWebsite", package: "swift-html") }
+    // The email document shell + email-safe components (Email.Document /
+    // VStack / Header / Paragraph / Link). Replaces the retired HTMLEmail and
+    // HTMLWebsite products, which swift-html no longer vends — it vends exactly
+    // one product, "HTML".
+    static var emailHTMLRendering: Self {
+        .product(name: "Email HTML Rendering", package: "swift-email-html")
+    }
     static var serverFoundation: Self { .product(name: "ServerFoundation", package: "swift-server-foundation") }
 }
 
@@ -40,6 +45,7 @@ let package = Package(
         .package(url: "https://github.com/swift-foundations/swift-mailgun.git", branch: "main"),
         .package(url: "https://github.com/swift-foundations/swift-dependencies.git", branch: "main"),
         .package(url: "https://github.com/swift-foundations/swift-html.git", branch: "main"),
+        .package(url: "https://github.com/swift-foundations/swift-email-html.git", branch: "main"),
         .package(url: "https://github.com/swift-foundations/swift-server-foundation.git", branch: "main")
     ],
     targets: [
@@ -49,9 +55,8 @@ let package = Package(
                 .identitiesTypes,
                 .identities,
                 .mailgunMessages,
-                .HTMLEmail,
                 .html,
-                .htmlWebsite,
+                .emailHTMLRendering,
                 .serverFoundation
             ]
         ),

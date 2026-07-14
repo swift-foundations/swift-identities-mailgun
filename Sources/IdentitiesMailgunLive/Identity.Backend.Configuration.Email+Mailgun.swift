@@ -26,7 +26,14 @@ extension Identity.Backend.Configuration.Email {
     /// - Returns: A configured Identity.Backend.Configuration.Email with Mailgun email support
     public static func mailgun(
         business: BusinessDetails,
-        router: any ParserPrinter<URLRequestData, Identity.Route>,
+        // `& Sendable`: the nine configuration members below are `@Sendable`
+        // closures that capture this router, so a bare erased `any ParserPrinter`
+        // cannot cross into them. The concrete routers are already Sendable
+        // (`Identity.Route.Router` is declared `ParserPrinter, Sendable` in
+        // IdentitiesTypes), so this constrains no real caller. Preferred over the
+        // `@unchecked Sendable` escape hatch `Identity.Backend.Configuration`
+        // itself uses for the same erased-router problem.
+        router: any ParserPrinter<URLRequestData, Identity.Route> & Sendable,
         sendEmail: (@Sendable (Mailgun.Messages.Send.Request) async throws -> Void)? = nil
     ) -> Self {
         @Dependency(Mailgun.Messages.self) var messages
@@ -156,7 +163,8 @@ extension Identity.Backend.Configuration.Email {
     /// - Returns: A configured Identity.Backend.Configuration.Email that only logs email operations
     public static func mailgunLogging(
         business: BusinessDetails,
-        router: any ParserPrinter<URLRequestData, Identity.Route>
+        // `& Sendable` for the same reason as `mailgun(business:router:sendEmail:)`.
+        router: any ParserPrinter<URLRequestData, Identity.Route> & Sendable
     ) -> Self {
         @Dependency(\.logger) var logger
 
