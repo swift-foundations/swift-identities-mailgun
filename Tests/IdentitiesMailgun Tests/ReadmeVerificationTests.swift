@@ -13,11 +13,11 @@ import Identity_Backend
 import ServerFoundation
 import Testing
 
-@Suite("README Verification")
-struct ReadmeVerificationTests {
+@Suite
+struct Test {
 
-    @Test("BusinessDetails initialization - README line 42-46")
-    func businessDetailsExample() throws {
+    @Test
+    func `Business Details initialization - README line 42-46`() throws {
         // Example from README - Basic Setup with Live Mailgun
         let business = BusinessDetails(
             name: "MyApp",
@@ -30,8 +30,8 @@ struct ReadmeVerificationTests {
         #expect(business.fromEmail.rawValue == "noreply@myapp.com")
     }
 
-    @Test("Email configuration type exists")
-    func emailConfigurationType() throws {
+    @Test
+    func `Email configuration type exists`() throws {
         // Verify Identity.Backend.Configuration.Email type exists
         let _: Identity.Backend.Configuration.Email.Type = Identity.Backend.Configuration.Email.self
     }
