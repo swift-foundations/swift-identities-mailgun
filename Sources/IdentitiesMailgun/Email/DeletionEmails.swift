@@ -15,7 +15,7 @@ import IdentitiesTypes
 // three templates do. The old import dragged the Live closure into a
 // Types-only file.
 import Mailgun_Messages_Types
-import ServerFoundation
+import Translated_String
 
 // MARK: - Deletion Request Notification
 

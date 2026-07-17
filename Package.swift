@@ -18,7 +18,11 @@ extension Target.Dependency {
     static var identities: Self { .product(name: "Identity Backend", package: "swift-authentication") }
     static var mailgunMessages: Self { .product(name: "Mailgun Messages", package: "swift-mailgun") }
     static var dependencies: Self { .product(name: "Dependencies", package: "swift-dependencies") }
+    static var emailAddress: Self { .product(name: "EmailAddress", package: "swift-emailaddress") }
     static var html: Self { .product(name: "HTML", package: "swift-html") }
+    static var loggerDependencies: Self { .product(name: "Logger Dependencies", package: "swift-logger-dependencies") }
+    static var logging: Self { .product(name: "Logging", package: "swift-log") }
+    static var translatedString: Self { .product(name: "Translated String", package: "swift-translating") }
     // The email document shell + email-safe components (Email.Document /
     // VStack / Header / Paragraph / Link). Replaces the retired HTMLEmail and
     // HTMLWebsite products, which swift-html no longer vends — it vends exactly
@@ -26,7 +30,6 @@ extension Target.Dependency {
     static var emailHTMLRendering: Self {
         .product(name: "Email HTML Rendering", package: "swift-email-html")
     }
-    static var serverFoundation: Self { .product(name: "ServerFoundation", package: "swift-server-foundation") }
 }
 
 let package = Package(
@@ -44,9 +47,12 @@ let package = Package(
         .package(url: "https://github.com/swift-foundations/swift-authentication.git", branch: "main"),
         .package(url: "https://github.com/swift-foundations/swift-mailgun.git", branch: "main"),
         .package(url: "https://github.com/swift-foundations/swift-dependencies.git", branch: "main"),
+        .package(url: "https://github.com/swift-foundations/swift-emailaddress.git", branch: "main"),
         .package(url: "https://github.com/swift-foundations/swift-html.git", branch: "main"),
         .package(url: "https://github.com/swift-foundations/swift-email-html.git", branch: "main"),
-        .package(url: "https://github.com/swift-foundations/swift-server-foundation.git", branch: "main")
+        .package(url: "https://github.com/swift-foundations/swift-logger-dependencies.git", branch: "main"),
+        .package(url: "https://github.com/swift-foundations/swift-translating.git", branch: "main"),
+        .package(url: "https://github.com/apple/swift-log.git", branch: "main")
     ],
     targets: [
         .target(
@@ -55,16 +61,19 @@ let package = Package(
                 .identitiesTypes,
                 .identities,
                 .mailgunMessages,
+                .emailAddress,
                 .html,
                 .emailHTMLRendering,
-                .serverFoundation
+                .translatedString
             ]
         ),
         .target(
             name: .identitiesMailgunLive,
             dependencies: [
                 .identitiesMailgun,
-                .dependencies
+                .dependencies,
+                .loggerDependencies,
+                .logging
             ]
         ),
         .testTarget(

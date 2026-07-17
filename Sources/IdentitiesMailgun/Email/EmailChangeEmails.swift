@@ -10,7 +10,7 @@ import Foundation
 import HTML
 import IdentitiesTypes
 import Mailgun_Messages_Types
-import ServerFoundation
+import Translated_String
 
 // MARK: - Email Change Request Notification
 

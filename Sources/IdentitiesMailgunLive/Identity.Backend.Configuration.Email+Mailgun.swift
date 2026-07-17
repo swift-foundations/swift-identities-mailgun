@@ -10,8 +10,9 @@ import Foundation
 import IdentitiesMailgun
 @preconcurrency import IdentitiesTypes
 import Identity_Backend
+import Logger_Dependencies
+import Logging
 import Mailgun_Messages_Types
-import ServerFoundation
 
 extension Identity.Backend.Configuration.Email {
     /// Creates an Identity.Backend.Configuration.Email that uses Mailgun for sending all identity-related emails.

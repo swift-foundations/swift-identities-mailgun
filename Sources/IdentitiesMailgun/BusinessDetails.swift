@@ -5,8 +5,8 @@
 //  Created by Coen ten Thije Boonkkamp on 30/08/2025.
 //
 
+import EmailAddress
 import Foundation
-import ServerFoundation
 
 public struct BusinessDetails: Sendable {
     public let name: String
