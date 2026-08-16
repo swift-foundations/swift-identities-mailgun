@@ -23,45 +23,19 @@ extension Identity.Backend.Configuration.Email {
     /// - Parameters:
     ///   - business: Business details for email branding and configuration
     ///   - router: Router for generating URLs in emails
-    ///   - sendEmail: Optional custom email sender. If nil, uses the Mailgun dependency.
+    ///   - sendEmail: Custom email sender.
     /// - Returns: A configured Identity.Backend.Configuration.Email with Mailgun email support
-    public static func mailgun(
+    public static func mailgun<
+        Router: ParserPrinter<URLRequestData, Identity.Route> & Sendable,
+        SendFailure: Swift.Error
+    >(
         business: BusinessDetails,
-        // `& Sendable`: the nine configuration members below are `@Sendable`
-        // closures that capture this router, so a bare erased `any ParserPrinter`
-        // cannot cross into them. The concrete routers are already Sendable
-        // (`Identity.Route.Router` is declared `ParserPrinter, Sendable` in
-        // IdentitiesTypes), so this constrains no real caller. Preferred over the
-        // `@unchecked Sendable` escape hatch `Identity.Backend.Configuration`
-        // itself uses for the same erased-router problem.
-        router: any ParserPrinter<URLRequestData, Identity.Route> & Sendable,
-        sendEmail: (@Sendable (Mailgun.Messages.Send.Request) async throws -> Void)? = nil
+        router: Router,
+        sendEmail:
+            @escaping @Sendable (Mailgun.Messages.Send.Request) async throws(SendFailure) ->
+            Void
     ) -> Self {
-        @Dependency(Mailgun.Messages.self) var messages
         @Dependency(\.logger) var logger
-
-        let sender =
-            sendEmail ?? { request in
-                do {
-                    let response = try await messages.client.send(request)
-                    logger.info(
-                        "Email sent successfully",
-                        metadata: [
-                            "messageId": "\(response.id)",
-                            "to": "\(request.to.map(\.rawValue).joined(separator: ", "))",
-                        ]
-                    )
-                } catch {
-                    logger.error(
-                        "Failed to send email",
-                        metadata: [
-                            "error": "\(error)",
-                            "to": "\(request.to.map(\.rawValue).joined(separator: ", "))",
-                        ]
-                    )
-                    throw error
-                }
-            }
 
         return Self(
             sendVerificationEmail: { email, token in
@@ -73,7 +47,7 @@ extension Identity.Backend.Configuration.Email {
                     business: business,
                     to: email
                 )
-                try await sender(request)
+                try await sendEmail(request)
             },
             sendPasswordResetEmail: { email, token in
                 let resetUrl = router.url(
@@ -84,14 +58,14 @@ extension Identity.Backend.Configuration.Email {
                     business: business,
                     to: email
                 )
-                try await sender(request)
+                try await sendEmail(request)
             },
             sendPasswordChangeNotification: { email in
                 let request = try Mailgun.Messages.Send.Request.passwordChangeNotification(
                     business: business,
                     to: email
                 )
-                try await sender(request)
+                try await sendEmail(request)
             },
             sendEmailChangeConfirmation: { currentEmail, newEmail, token in
                 let verificationURL = router.url(
@@ -103,7 +77,7 @@ extension Identity.Backend.Configuration.Email {
                     newEmail: newEmail,
                     business: business
                 )
-                try await sender(request)
+                try await sendEmail(request)
             },
             sendEmailChangeRequestNotification: { currentEmail, newEmail in
                 let request = try Mailgun.Messages.Send.Request.emailChangeRequestNotification(
@@ -111,7 +85,7 @@ extension Identity.Backend.Configuration.Email {
                     newEmail: newEmail,
                     business: business
                 )
-                try await sender(request)
+                try await sendEmail(request)
             },
             onEmailChangeSuccess: { currentEmail, newEmail in
                 // Send notification to old email
@@ -121,7 +95,7 @@ extension Identity.Backend.Configuration.Email {
                         newEmail: newEmail,
                         business: business
                     )
-                try await sender(oldEmailRequest)
+                try await sendEmail(oldEmailRequest)
 
                 // Send welcome to new email
                 let newEmailRequest = try Mailgun.Messages.Send.Request
@@ -130,27 +104,64 @@ extension Identity.Backend.Configuration.Email {
                         newEmail: newEmail,
                         business: business
                     )
-                try await sender(newEmailRequest)
+                try await sendEmail(newEmailRequest)
             },
             sendDeletionRequestNotification: { email in
                 let request = try Mailgun.Messages.Send.Request.deletionRequestNotification(
                     email: email,
                     business: business
                 )
-                try await sender(request)
+                try await sendEmail(request)
             },
             sendDeletionConfirmationNotification: { email in
                 let request = try Mailgun.Messages.Send.Request.deletionConfirmationNotification(
                     email: email,
                     business: business
                 )
-                try await sender(request)
+                try await sendEmail(request)
             },
             onIdentityCreationSuccess: { identity in
                 // Optional: Send welcome email
                 logger.info("New identity created: \(identity.email)")
             }
         )
+    }
+
+    /// Creates an Identity.Backend.Configuration.Email that uses the `Mailgun.Messages` dependency
+    /// for sending all identity-related emails, logging every send outcome.
+    ///
+    /// - Parameters:
+    ///   - business: Business details for email branding and configuration
+    ///   - router: Router for generating URLs in emails
+    /// - Returns: A configured Identity.Backend.Configuration.Email with Mailgun email support
+    public static func mailgun<Router: ParserPrinter<URLRequestData, Identity.Route> & Sendable>(
+        business: BusinessDetails,
+        router: Router
+    ) -> Self {
+        @Dependency(Mailgun.Messages.self) var messages
+        @Dependency(\.logger) var logger
+
+        return Self.mailgun(business: business, router: router) { request in
+            do {
+                let response = try await messages.client.send(request)
+                logger.info(
+                    "Email sent successfully",
+                    metadata: [
+                        "messageId": "\(response.id)",
+                        "to": "\(request.to.map(\.rawValue).joined(separator: ", "))",
+                    ]
+                )
+            } catch {
+                logger.error(
+                    "Failed to send email",
+                    metadata: [
+                        "error": "\(error)",
+                        "to": "\(request.to.map(\.rawValue).joined(separator: ", "))",
+                    ]
+                )
+                throw error
+            }
+        }
     }
 
     /// Creates a logging-only Identity.Backend.Configuration.Email for development/testing.
@@ -162,10 +173,11 @@ extension Identity.Backend.Configuration.Email {
     ///   - business: Business details for email branding and configuration
     ///   - router: Router for generating URLs in emails
     /// - Returns: A configured Identity.Backend.Configuration.Email that only logs email operations
-    public static func mailgunLogging(
+    public static func mailgunLogging<
+        Router: ParserPrinter<URLRequestData, Identity.Route> & Sendable
+    >(
         business: BusinessDetails,
-        // `& Sendable` for the same reason as `mailgun(business:router:sendEmail:)`.
-        router: any ParserPrinter<URLRequestData, Identity.Route> & Sendable
+        router: Router
     ) -> Self {
         @Dependency(\.logger) var logger
 
