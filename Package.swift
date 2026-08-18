@@ -35,8 +35,8 @@ extension Target.Dependency {
 let package = Package(
     name: "swift-identities-mailgun",
     platforms: [
-        .macOS(.v26),
-        .iOS(.v26)
+        .macOS("27"),
+        .iOS("27")
     ],
     products: [
         .library(name: .identitiesMailgun, targets: [.identitiesMailgun]),
